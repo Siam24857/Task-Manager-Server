@@ -69,7 +69,10 @@ DATABASES = {
 }
 
 from mongoengine import connect
-connect(db=os.getenv('DATABASE_NAME', 'task_manager'), host=os.getenv('MONGODB_URI', 'mongodb://localhost:27017/'))
+
+mongo_uri = os.getenv('MONGODB_URI')
+if mongo_uri:
+    connect(db=os.getenv('DATABASE_NAME', 'task_manager'), host=mongo_uri)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
