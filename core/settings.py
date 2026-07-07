@@ -11,7 +11,18 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production'
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+vercel_host = os.getenv('VERCEL_URL', '').strip().replace('https://', '').replace('http://', '')
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+if vercel_host:
+    ALLOWED_HOSTS.append(vercel_host)
+    ALLOWED_HOSTS.append(f'.{vercel_host}')
+
+CSRF_TRUSTED_ORIGINS = []
+if vercel_host:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{vercel_host}')
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
