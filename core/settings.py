@@ -7,6 +7,33 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def parse_timedelta(value, default):
+    if isinstance(value, timedelta):
+        return value
+    if isinstance(value, int):
+        return timedelta(seconds=value)
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return default
+        if value.isdigit():
+            return timedelta(seconds=int(value))
+        parts = value.split(":")
+        if len(parts) == 3:
+            try:
+                hours, minutes, seconds = [int(p) for p in parts]
+                return timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            except ValueError:
+                pass
+        if len(parts) == 2:
+            try:
+                minutes, seconds = [int(p) for p in parts]
+                return timedelta(minutes=minutes, seconds=seconds)
+            except ValueError:
+                pass
+    return default
+
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
@@ -72,12 +99,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# Use PostgreSQL for production on Vercel
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'task_manager'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
+
+# Fallback to SQLite for local development
+if not os.getenv('POSTGRES_HOST'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 from mongoengine import connect
 
@@ -132,8 +173,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': parse_timedelta(os.getenv('ACCESS_TOKEN_LIFETIME', '1 day'), timedelta(days=1)),
+    'REFRESH_TOKEN_LIFETIME': parse_timedelta(os.getenv('REFRESH_TOKEN_LIFETIME', '7 days'), timedelta(days=7)),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
@@ -144,6 +185,9 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://*.vercel.app",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 CORS_ALLOW_CREDENTIALS = True

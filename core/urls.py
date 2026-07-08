@@ -2,8 +2,22 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+
+def api_root(request):
+    return JsonResponse({
+        'message': 'BotLeague API Server',
+        'version': '1.0.0',
+        'endpoints': {
+            'auth': '/api/auth/',
+            'tasks': '/api/tasks/',
+            'images': '/api/images/',
+            'annotations': '/api/annotations/',
+        }
+    })
 
 urlpatterns = [
+    path('', api_root),
     path('admin/', admin.site.urls),
     path('api/auth/', include('apps.authentication.urls')),
     path('api/tasks/', include('apps.tasks.urls')),

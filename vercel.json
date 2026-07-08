@@ -11,5 +11,7 @@
       "src": "/(.*)",
       "dest": "core/wsgi.py"
     }
-  ]
+  ],
+  "installCommand": "pip install -r requirements.txt",
+  "buildCommand": "python vercel_build.py"
 }

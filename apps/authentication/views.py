@@ -15,12 +15,19 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({
-            'user': UserSerializer(user).data,
-            'message': 'User created successfully'
-        }, status=status.HTTP_201_CREATED)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            return Response({
+                'user': UserSerializer(user).data,
+                'message': 'User created successfully'
+            }, status=status.HTTP_201_CREATED)
+        except Exception as exc:
+            detail = getattr(exc, 'detail', None)
+            if detail is not None:
+                status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)
+                return Response(detail, status=status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

@@ -13,8 +13,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = User.USERNAME_FIELD
+
     def validate(self, attrs):
-        data = super().validate(attrs)
+        try:
+            data = super().validate(attrs)
+        except Exception as exc:
+            raise serializers.ValidationError(
+                {'detail': str(exc)}
+            )
         data['user'] = UserSerializer(self.user).data
         return data
 
