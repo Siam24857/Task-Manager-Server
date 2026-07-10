@@ -79,11 +79,22 @@ class OptionsMiddleware:
     def __call__(self, request):
         if request.method == 'OPTIONS':
             from django.http import HttpResponse
+            origin = request.headers.get('Origin', '')
+            allowed_origins = [
+                'https://task-manager-client-feih.vercel.app',
+                'https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app',
+                'https://task-manager-client-tff6-sable.vercel.app',
+            ]
+            
             response = HttpResponse(status=200)
-            response['Access-Control-Allow-Origin'] = '*'
             response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
             response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
             response['Access-Control-Allow-Credentials'] = 'true'
+            
+            # Return specific origin if allowed
+            if origin in allowed_origins:
+                response['Access-Control-Allow-Origin'] = origin
+            
             return response
         return self.get_response(request)
 
@@ -224,11 +235,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
     "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
-    "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-servers.vercel.app"
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
 
