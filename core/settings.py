@@ -36,7 +36,7 @@ def parse_timedelta(value, default):
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 vercel_host = os.getenv('VERCEL_URL', '').strip().replace('https://', '').replace('http://', '')
 
