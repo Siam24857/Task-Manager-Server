@@ -82,8 +82,27 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 ]
 
-# Disable trailing slash redirects to prevent CORS preflight issues
-APPEND_SLASH = False
+# Custom middleware to handle OPTIONS requests before any redirects
+class OptionsMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.method == 'OPTIONS':
+            from django.http import HttpResponse
+            response = HttpResponse(status=200)
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            response['Access-Control-Allow-Credentials'] = 'true'
+            return response
+        return self.get_response(request)
+
+# Insert OptionsMiddleware at the beginning
+MIDDLEWARE.insert(1, 'core.settings.OptionsMiddleware')
+
+# Enable trailing slash to match Django URL patterns
+APPEND_SLASH = True
 
 ROOT_URLCONF = 'core.urls'
 
@@ -207,6 +226,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
     "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
+    "https://task-manager-client-tff6-sable.vercel.app"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
