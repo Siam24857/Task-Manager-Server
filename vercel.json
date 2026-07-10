@@ -6,7 +6,34 @@
       "use": "@vercel/python"
     }
   ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://task-manager-client-tff6-sable.vercel.app"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With, X-CSRFToken"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
+    }
+  ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "core/wsgi.py"
+    },
     {
       "src": "/(.*)",
       "dest": "core/wsgi.py"
