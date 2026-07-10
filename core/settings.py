@@ -47,6 +47,7 @@ if vercel_host:
 
 CSRF_TRUSTED_ORIGINS = [
     'https://task-manager-client-feih.vercel.app',
+    'https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app',
 ]
 if vercel_host:
     CSRF_TRUSTED_ORIGINS.append(f'https://{vercel_host}')
@@ -72,13 +73,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
 ]
 
 # Disable trailing slash redirects to prevent CORS preflight issues
@@ -203,6 +204,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://task-manager-client-feih.vercel.app",
+    "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
+    "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
 ]
 
@@ -232,7 +235,8 @@ CORS_ALLOW_METHODS = [
 ]
 
 # Secure cookie settings for production
+# Temporarily relaxed for debugging - will need HTTPS for SameSite=None
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
