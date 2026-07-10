@@ -30,7 +30,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
         if search:
             queryset = queryset.filter(title__icontains=search)
         if due_date:
-            queryset = queryset.filter(due_date__date=due_date)
+            from datetime import datetime, timezone
+            try:
+                date_obj = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                date_start = date_obj.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+                date_end = date_obj.replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=timezone.utc)
+                queryset = queryset.filter(due_date__gte=date_start, due_date__lte=date_end)
+            except (ValueError, TypeError):
+                pass
 
         return queryset
 

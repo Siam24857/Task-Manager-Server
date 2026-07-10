@@ -48,6 +48,7 @@ if vercel_host:
 CSRF_TRUSTED_ORIGINS = [
     'https://task-manager-client-feih.vercel.app',
     'https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app',
+    'https://task-manager-client-tff6-sable.vercel.app',
 ]
 if vercel_host:
     CSRF_TRUSTED_ORIGINS.append(f'https://{vercel_host}')
@@ -79,28 +80,16 @@ class OptionsMiddleware:
     def __call__(self, request):
         if request.method == 'OPTIONS':
             from django.http import HttpResponse
-            origin = request.headers.get('Origin', '')
-            allowed_origins = [
-                'https://task-manager-client-feih.vercel.app',
-                'https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app',
-                'https://task-manager-client-tff6-sable.vercel.app',
-            ]
-            
             response = HttpResponse(status=200)
+            response['Access-Control-Allow-Origin'] = '*'
             response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
             response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-            response['Access-Control-Allow-Credentials'] = 'true'
-            
-            # Return specific origin if allowed
-            if origin in allowed_origins:
-                response['Access-Control-Allow-Origin'] = origin
-            
             return response
         return self.get_response(request)
 
 MIDDLEWARE = [
-    'core.settings.OptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'core.settings.OptionsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -198,10 +187,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'apps.authentication.authentication.MongoTokenAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'UNAUTHENTICATED_USER': None,
 }
 
 # SIMPLE_JWT = {
@@ -233,29 +225,18 @@ REST_FRAMEWORK = {
 #     'AUTH_COOKIE_RECEIVE': True,
 # }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://task-manager-client-feih.vercel.app",
-    "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
-    "https://task-manager-client-tff6-sable.vercel.app",
-    "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
-    "https://task-manager-servers.vercel.app",
-    "https://task-manager-serverses.vercel.app",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = False
 
 # Session cookie settings for cross-domain
-SESSION_COOKIE_SECURE = True  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_DOMAIN = None
 
 # CSRF settings
-CSRF_COOKIE_SECURE = True  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_DOMAIN = None

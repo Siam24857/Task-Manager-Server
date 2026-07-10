@@ -1,10 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import get_user_model
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import get_user_model, authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .serializers import UserSerializer, RegisterSerializer
+from .models import AuthToken
 
 User = get_user_model()
 
@@ -21,33 +22,22 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            import logging
-            logging.info(f"Registration attempt with data: {request.data}")
-            
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
-                logging.error(f"Validation errors: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
-            logging.info("Serializer validation passed")
+
             user = serializer.save()
-            
-            logging.info(f"User created: {user.email}")
-            
-            # Auto-login after registration
-            login(request, user)
-            
+
+            auth_token = AuthToken.generate_token(user)
+
             response = Response({
                 'user': UserSerializer(user).data,
+                'token': auth_token.token,
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
-            
+
             return response
         except Exception as exc:
-            import logging
-            import traceback
-            logging.error(f"Registration error: {str(exc)}")
-            logging.error(f"Traceback: {traceback.format_exc()}")
             detail = getattr(exc, 'detail', None)
             if detail is not None:
                 status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)
@@ -64,46 +54,60 @@ class LoginView(generics.GenericAPIView):
         return response
 
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        if not email or not password:
-            return Response({'detail': 'Email and password are required'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
-        
-        # Authenticate user
-        user = authenticate(request, username=email, password=password)
-        
-        if user is None:
-            return Response({'detail': 'Invalid credentials'}, 
-                          status=status.HTTP_401_UNAUTHORIZED)
-        
-        # # Login using Django session
-        # login(request, user)
-        
-        response = Response({
-            'user': UserSerializer(user).data,
-            'message': 'Login successful'
-        }, status=status.HTTP_200_OK)
-        
-        return response
+        try:
+            email = request.data.get('email')
+            password = request.data.get('password')
+
+            if not email or not password:
+                return Response({'detail': 'Email and password are required'},
+                              status=status.HTTP_400_BAD_REQUEST)
+
+            user = authenticate(request, username=email, password=password)
+
+            if user is None:
+                return Response({'detail': 'Invalid credentials'},
+                              status=status.HTTP_401_UNAUTHORIZED)
+
+            auth_token = AuthToken.generate_token(user)
+
+            response = Response({
+                'user': UserSerializer(user).data,
+                'token': auth_token.token,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
+
+            return response
+        except Exception as exc:
+            return Response({'detail': f'Login error: {str(exc)}'},
+                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def options(self, request, *args, **kwargs):
         response = Response(status=status.HTTP_200_OK)
         return response
 
     def post(self, request, *args, **kwargs):
-        # Logout using Django session
-        logout(request)
-        
-        response = Response({'message': 'Logged out successfully'}, 
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        token = None
+        if auth_header.startswith('Token '):
+            token = auth_header[6:]
+        elif auth_header.startswith('Bearer '):
+            token = auth_header[7:]
+
+        if token:
+            try:
+                auth_token = AuthToken.objects.get(token=token, is_active=True)
+                auth_token.is_active = False
+                auth_token.save()
+            except AuthToken.DoesNotExist:
+                pass
+
+        return Response({'message': 'Logged out successfully'},
                          status=status.HTTP_200_OK)
-        return response
 
 
 @method_decorator(csrf_exempt, name='dispatch')

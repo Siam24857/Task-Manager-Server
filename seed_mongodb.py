@@ -13,6 +13,10 @@ MONGODB_URI = "mongodb+srv://Taskmanegr:s3NdVNE8RdxycZuN@cluster0.6ezfogq.mongod
 DATABASE_NAME = "taskmaneger"
 
 # Fake task data
+# Default user_id for seeded tasks (first registered user)
+DEFAULT_USER_ID = 1
+DEFAULT_USER_EMAIL = "demo@example.com"
+
 fake_tasks = [
     {
         "title": "Complete project documentation",
@@ -21,6 +25,8 @@ fake_tasks = [
         "priority": "high",
         "due_date": (datetime.now() + timedelta(days=3)).isoformat(),
         "tags": ["documentation", "priority"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -31,6 +37,8 @@ fake_tasks = [
         "priority": "high",
         "due_date": (datetime.now() + timedelta(days=1)).isoformat(),
         "tags": ["bug", "authentication", "urgent"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -41,6 +49,8 @@ fake_tasks = [
         "priority": "medium",
         "due_date": (datetime.now() + timedelta(days=7)).isoformat(),
         "tags": ["frontend", "ui", "feature"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -51,6 +61,8 @@ fake_tasks = [
         "priority": "medium",
         "due_date": (datetime.now() + timedelta(days=5)).isoformat(),
         "tags": ["backend", "performance", "database"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -61,6 +73,8 @@ fake_tasks = [
         "priority": "medium",
         "due_date": (datetime.now() + timedelta(days=10)).isoformat(),
         "tags": ["testing", "quality"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -71,6 +85,8 @@ fake_tasks = [
         "priority": "high",
         "due_date": (datetime.now() + timedelta(days=14)).isoformat(),
         "tags": ["deployment", "production"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -81,6 +97,8 @@ fake_tasks = [
         "priority": "high",
         "due_date": (datetime.now() - timedelta(days=2)).isoformat(),
         "tags": ["security", "audit"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": (datetime.now() - timedelta(days=5)).isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -91,6 +109,8 @@ fake_tasks = [
         "priority": "medium",
         "due_date": (datetime.now() + timedelta(days=4)).isoformat(),
         "tags": ["devops", "automation"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -101,6 +121,8 @@ fake_tasks = [
         "priority": "low",
         "due_date": (datetime.now() + timedelta(days=21)).isoformat(),
         "tags": ["frontend", "dashboard", "ui"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     },
@@ -111,6 +133,8 @@ fake_tasks = [
         "priority": "low",
         "due_date": (datetime.now() + timedelta(days=30)).isoformat(),
         "tags": ["feature", "notifications"],
+        "user_id": DEFAULT_USER_ID,
+        "user_email": DEFAULT_USER_EMAIL,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     }
