@@ -79,8 +79,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Disable CommonMiddleware redirect for trailing slashes to avoid CORS preflight redirects
-APPEND_SLASH = False
+# Enable Django-style trailing slashes
+APPEND_SLASH = True
 
 ROOT_URLCONF = 'core.urls'
 
