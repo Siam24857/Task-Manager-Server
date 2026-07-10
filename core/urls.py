@@ -3,11 +3,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
 def api_root(request):
-    response = JsonResponse({
+    return JsonResponse({
         'message': 'Task Manager API Server',
         'version': '1.0.0',
         'endpoints': {
@@ -17,10 +15,6 @@ def api_root(request):
             'annotations': '/api/annotations/',
         }
     })
-    response['Access-Control-Allow-Origin'] = '*'
-    response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
-    response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-    return response
 
 urlpatterns = [
     path('', api_root),
