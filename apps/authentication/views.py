@@ -36,25 +36,30 @@ class RegisterView(generics.CreateAPIView):
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
             
-            # Set HttpOnly cookies
-            response.set_cookie(
-                settings.SIMPLE_JWT['AUTH_COOKIE'],
-                str(refresh.access_token),
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-            )
-            response.set_cookie(
-                settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                str(refresh),
-                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-            )
+            # Set HttpOnly cookies with error handling
+            try:
+                response.set_cookie(
+                    settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    str(refresh.access_token),
+                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
+                )
+                response.set_cookie(
+                    settings.SIMPLE_JWT['REFRESH_COOKIE'],
+                    str(refresh),
+                    expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                    httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
+                    secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
+                    path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
+                )
+            except Exception as cookie_error:
+                # Log cookie error but don't fail registration
+                import logging
+                logging.error(f"Cookie setting error: {cookie_error}")
             
             return response
         except Exception as exc:
@@ -85,25 +90,29 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 'message': 'Login successful'
             }, status=status.HTTP_200_OK)
             
-            # Set HttpOnly cookies
-            response.set_cookie(
-                settings.SIMPLE_JWT['AUTH_COOKIE'],
-                str(data['access']),
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-            )
-            response.set_cookie(
-                settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                str(data['refresh']),
-                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-            )
+            # Set HttpOnly cookies with error handling
+            try:
+                response.set_cookie(
+                    settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    str(data['access']),
+                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
+                )
+                response.set_cookie(
+                    settings.SIMPLE_JWT['REFRESH_COOKIE'],
+                    str(data['refresh']),
+                    expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                    httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
+                    secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
+                    path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
+                )
+            except Exception as cookie_error:
+                import logging
+                logging.error(f"Cookie setting error: {cookie_error}")
             
             return response
         except Exception as exc:
@@ -136,28 +145,36 @@ class CustomTokenRefreshView(TokenRefreshView):
             response = Response({'message': 'Token refreshed successfully'}, 
                              status=status.HTTP_200_OK)
             
-            # Update access token cookie
-            response.set_cookie(
-                settings.SIMPLE_JWT['AUTH_COOKIE'],
-                str(data['access']),
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-            )
+            # Update access token cookie with error handling
+            try:
+                response.set_cookie(
+                    settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    str(data['access']),
+                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
+                )
+            except Exception as cookie_error:
+                import logging
+                logging.error(f"Cookie setting error: {cookie_error}")
             
             # Update refresh token cookie if rotated
             if 'refresh' in data:
-                response.set_cookie(
-                    settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                    str(data['refresh']),
-                    expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-                )
+                try:
+                    response.set_cookie(
+                        settings.SIMPLE_JWT['REFRESH_COOKIE'],
+                        str(data['refresh']),
+                        expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                        httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
+                        secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
+                        samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
+                        path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
+                    )
+                except Exception as cookie_error:
+                    import logging
+                    logging.error(f"Cookie setting error: {cookie_error}")
             
             return response
         except Exception as exc:
