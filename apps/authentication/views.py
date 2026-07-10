@@ -1,13 +1,13 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from .serializers import UserSerializer, CustomTokenObtainPairSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer
+from .models import AuthToken
 
 User = get_user_model()
 
@@ -37,8 +37,12 @@ class RegisterView(generics.CreateAPIView):
             
             logging.info(f"User created: {user.email}")
             
+            # Generate authentication token
+            auth_token = AuthToken.generate_token(user)
+            
             response = Response({
                 'user': UserSerializer(user).data,
+                'token': auth_token.token,
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
             
@@ -56,8 +60,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
 
     def options(self, request, *args, **kwargs):
@@ -65,83 +68,30 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return response
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            data = serializer.validated_data
-            
-            response = Response({
-                'user': data['user'],
-                'access': str(data['access']),
-                'refresh': str(data['refresh']),
-                'message': 'Login successful'
-            }, status=status.HTTP_200_OK)
-            
-            return response
-        except Exception as exc:
-            return Response({'detail': str(exc)}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CustomTokenRefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
-
-    def options(self, request, *args, **kwargs):
-        response = Response(status=status.HTTP_200_OK)
-        return response
-
-    def post(self, request, *args, **kwargs):
-        # Get refresh token from cookie
-        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['REFRESH_COOKIE'])
+        email = request.data.get('email')
+        password = request.data.get('password')
         
-        if not refresh_token:
-            return Response({'detail': 'Refresh token not found in cookies'}, 
+        if not email or not password:
+            return Response({'detail': 'Email and password are required'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        # Authenticate user
+        user = authenticate(request, username=email, password=password)
+        
+        if user is None:
+            return Response({'detail': 'Invalid credentials'}, 
                           status=status.HTTP_401_UNAUTHORIZED)
         
-        request.data['refresh'] = refresh_token
+        # Generate authentication token
+        auth_token = AuthToken.generate_token(user)
         
-        serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            data = serializer.validated_data
-            
-            response = Response({'message': 'Token refreshed successfully'}, 
-                             status=status.HTTP_200_OK)
-            
-            # Update access token cookie with error handling
-            try:
-                response.set_cookie(
-                    settings.SIMPLE_JWT['AUTH_COOKIE'],
-                    str(data['access']),
-                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-                )
-            except Exception as cookie_error:
-                import logging
-                logging.error(f"Cookie setting error: {cookie_error}")
-            
-            # Update refresh token cookie if rotated
-            if 'refresh' in data:
-                try:
-                    response.set_cookie(
-                        settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                        str(data['refresh']),
-                        expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                        httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                        secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                        samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                        path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-                    )
-                except Exception as cookie_error:
-                    import logging
-                    logging.error(f"Cookie setting error: {cookie_error}")
-            
-            return response
-        except Exception as exc:
-            return Response({'detail': str(exc)}, status=status.HTTP_401_UNAUTHORIZED)
+        response = Response({
+            'user': UserSerializer(user).data,
+            'token': auth_token.token,
+            'message': 'Login successful'
+        }, status=status.HTTP_200_OK)
+        
+        return response
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -153,24 +103,22 @@ class LogoutView(generics.GenericAPIView):
         return response
 
     def post(self, request, *args, **kwargs):
-        response = Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        # Deactivate user's tokens
+        AuthToken.objects.filter(user_id=request.user.id, is_active=True).update(is_active=False)
         
-        # Clear cookies
-        response.delete_cookie(
-            settings.SIMPLE_JWT['AUTH_COOKIE'],
-            path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-        )
-        response.delete_cookie(
-            settings.SIMPLE_JWT['REFRESH_COOKIE'],
-            path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-        )
-        
+        response = Response({'message': 'Logged out successfully'}, 
+                         status=status.HTTP_200_OK)
         return response
 
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
+@method_decorator(csrf_exempt, name='dispatch')
+class ProfileView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+    def options(self, request, *args, **kwargs):
+        response = Response(status=status.HTTP_200_OK)
+        return response
 
     def get_object(self):
         return self.request.user
