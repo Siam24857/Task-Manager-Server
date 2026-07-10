@@ -23,46 +23,27 @@ class RegisterView(generics.CreateAPIView):
         return response
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
         try:
+            import logging
+            logging.info(f"Registration attempt with data: {request.data}")
+            
+            serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            
+            logging.info("Serializer validation passed")
             user = serializer.save()
             
-            # Auto-login after registration by setting cookies
-            refresh = RefreshToken.for_user(user)
+            logging.info(f"User created: {user.email}")
             
             response = Response({
                 'user': UserSerializer(user).data,
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
             
-            # Set HttpOnly cookies with error handling
-            try:
-                response.set_cookie(
-                    settings.SIMPLE_JWT['AUTH_COOKIE'],
-                    str(refresh.access_token),
-                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-                )
-                response.set_cookie(
-                    settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                    str(refresh),
-                    expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-                )
-            except Exception as cookie_error:
-                # Log cookie error but don't fail registration
-                import logging
-                logging.error(f"Cookie setting error: {cookie_error}")
-            
             return response
         except Exception as exc:
+            import logging
+            logging.error(f"Registration error: {str(exc)}", exc_info=True)
             detail = getattr(exc, 'detail', None)
             if detail is not None:
                 status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)

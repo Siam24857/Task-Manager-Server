@@ -1,13 +1,20 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import Task
 from .serializers import TaskSerializer
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
+
+    def options(self, request, *args, **kwargs):
+        response = Response(status=status.HTTP_200_OK)
+        return response
 
     def get_queryset(self):
         queryset = Task.objects.filter(user=self.request.user)
@@ -28,16 +35,26 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
+
+    def options(self, request, *args, **kwargs):
+        response = Response(status=status.HTTP_200_OK)
+        return response
 
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TaskBulkUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
+
+    def options(self, request, *args, **kwargs):
+        response = Response(status=status.HTTP_200_OK)
+        return response
 
     def put(self, request, *args, **kwargs):
         tasks_data = request.data.get('tasks', [])
