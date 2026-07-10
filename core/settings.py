@@ -217,15 +217,22 @@ SIMPLE_JWT = {
     'AUTH_COOKIE': 'access_token',
     'REFRESH_COOKIE': 'refresh_token',
     'AUTH_COOKIE_DOMAIN': None,
-    'AUTH_COOKIE_SECURE': True,
+    'AUTH_COOKIE_SECURE': False,  # Set to False for development
     'AUTH_COOKIE_HTTPONLY': True,
     'AUTH_COOKIE_PATH': '/',
     'AUTH_COOKIE_SAMESITE': 'Lax',
     'REFRESH_COOKIE_DOMAIN': None,
-    'REFRESH_COOKIE_SECURE': True,
+    'REFRESH_COOKIE_SECURE': False,  # Set to False for development
     'REFRESH_COOKIE_HTTPONLY': True,
     'REFRESH_COOKIE_PATH': '/',
     'REFRESH_COOKIE_SAMESITE': 'Lax',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_COOKIE_SEND_ONLY': True,
+    'AUTH_COOKIE_RECEIVE': True,
 }
 
 CORS_ALLOWED_ORIGINS = [

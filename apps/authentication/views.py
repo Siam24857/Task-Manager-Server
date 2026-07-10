@@ -72,32 +72,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             
             response = Response({
                 'user': data['user'],
+                'access': str(data['access']),
+                'refresh': str(data['refresh']),
                 'message': 'Login successful'
             }, status=status.HTTP_200_OK)
-            
-            # Set HttpOnly cookies with error handling
-            try:
-                response.set_cookie(
-                    settings.SIMPLE_JWT['AUTH_COOKIE'],
-                    str(data['access']),
-                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-                )
-                response.set_cookie(
-                    settings.SIMPLE_JWT['REFRESH_COOKIE'],
-                    str(data['refresh']),
-                    expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
-                    httponly=settings.SIMPLE_JWT['REFRESH_COOKIE_HTTPONLY'],
-                    secure=settings.SIMPLE_JWT['REFRESH_COOKIE_SECURE'],
-                    samesite=settings.SIMPLE_JWT['REFRESH_COOKIE_SAMESITE'],
-                    path=settings.SIMPLE_JWT['REFRESH_COOKIE_PATH'],
-                )
-            except Exception as cookie_error:
-                import logging
-                logging.error(f"Cookie setting error: {cookie_error}")
             
             return response
         except Exception as exc:
