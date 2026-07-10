@@ -200,7 +200,7 @@ AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'apps.authentication.authentication.MongoTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -249,6 +249,18 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Session cookie settings for cross-domain
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_DOMAIN = None
+
+# CSRF settings
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_DOMAIN = None
 
 CORS_ALLOW_HEADERS = [
     'accept',

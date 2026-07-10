@@ -1,13 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
-from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .serializers import UserSerializer, RegisterSerializer
-from .models import AuthToken
 
 User = get_user_model()
 
@@ -37,12 +35,11 @@ class RegisterView(generics.CreateAPIView):
             
             logging.info(f"User created: {user.email}")
             
-            # Generate authentication token
-            auth_token = AuthToken.generate_token(user)
+            # Auto-login after registration
+            login(request, user)
             
             response = Response({
                 'user': UserSerializer(user).data,
-                'token': auth_token.token,
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
             
@@ -82,12 +79,11 @@ class LoginView(generics.GenericAPIView):
             return Response({'detail': 'Invalid credentials'}, 
                           status=status.HTTP_401_UNAUTHORIZED)
         
-        # Generate authentication token
-        auth_token = AuthToken.generate_token(user)
+        # Login using Django session
+        login(request, user)
         
         response = Response({
             'user': UserSerializer(user).data,
-            'token': auth_token.token,
             'message': 'Login successful'
         }, status=status.HTTP_200_OK)
         
@@ -103,8 +99,8 @@ class LogoutView(generics.GenericAPIView):
         return response
 
     def post(self, request, *args, **kwargs):
-        # Deactivate user's tokens
-        AuthToken.objects.filter(user_id=request.user.id, is_active=True).update(is_active=False)
+        # Logout using Django session
+        logout(request)
         
         response = Response({'message': 'Logged out successfully'}, 
                          status=status.HTTP_200_OK)
