@@ -71,17 +71,6 @@ INSTALLED_APPS = [
     'apps.annotations',
 ]
 
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-]
-
 # Custom middleware to handle OPTIONS requests before any redirects
 class OptionsMiddleware:
     def __init__(self, get_response):
@@ -98,11 +87,20 @@ class OptionsMiddleware:
             return response
         return self.get_response(request)
 
-# Insert OptionsMiddleware at the beginning
-MIDDLEWARE.insert(1, 'core.settings.OptionsMiddleware')
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'core.settings.OptionsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+]
 
-# Enable trailing slash to match Django URL patterns
-APPEND_SLASH = True
+# Disable trailing slash redirects to prevent CORS preflight issues
+APPEND_SLASH = False
 
 ROOT_URLCONF = 'core.urls'
 
