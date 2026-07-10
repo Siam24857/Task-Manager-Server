@@ -45,7 +45,9 @@ if vercel_host:
     ALLOWED_HOSTS.append(vercel_host)
     ALLOWED_HOSTS.append(f'.{vercel_host}')
 
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    'https://task-manager-client-feih.vercel.app',
+]
 if vercel_host:
     CSRF_TRUSTED_ORIGINS.append(f'https://{vercel_host}')
 
@@ -69,8 +71,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,8 +81,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Enable Django-style trailing slashes
-APPEND_SLASH = True
+# Disable trailing slash redirects to prevent CORS preflight issues
+APPEND_SLASH = False
 
 ROOT_URLCONF = 'core.urls'
 
