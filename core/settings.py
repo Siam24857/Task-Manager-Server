@@ -224,7 +224,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
     "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
-    "https://task-manager-client-tff6-sable.vercel.app"
+    "https://task-manager-client-tff6-sable.vercel.app",
+    "https://task-manager-servers.vercel.app"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
