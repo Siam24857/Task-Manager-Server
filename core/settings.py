@@ -88,8 +88,8 @@ class OptionsMiddleware:
         return self.get_response(request)
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'core.settings.OptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
