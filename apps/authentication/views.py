@@ -28,7 +28,9 @@ class RegisterView(generics.CreateAPIView):
             logging.info(f"Registration attempt with data: {request.data}")
             
             serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            if not serializer.is_valid():
+                logging.error(f"Validation errors: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
             logging.info("Serializer validation passed")
             user = serializer.save()
@@ -43,7 +45,9 @@ class RegisterView(generics.CreateAPIView):
             return response
         except Exception as exc:
             import logging
-            logging.error(f"Registration error: {str(exc)}", exc_info=True)
+            import traceback
+            logging.error(f"Registration error: {str(exc)}")
+            logging.error(f"Traceback: {traceback.format_exc()}")
             detail = getattr(exc, 'detail', None)
             if detail is not None:
                 status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)

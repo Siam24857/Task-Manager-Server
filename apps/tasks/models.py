@@ -1,34 +1,37 @@
-from django.db import models
+from mongoengine import Document, fields
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
 
-class Task(models.Model):
-    STATUS_CHOICES = [
-        ('todo', 'To Do'),
-        ('in_progress', 'In Progress'),
-        ('done', 'Done'),
-    ]
+class Task(Document):
+    STATUS_CHOICES = (
+        'todo',
+        'in_progress',
+        'done',
+    )
 
-    PRIORITY_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
-    ]
+    PRIORITY_CHOICES = (
+        'low',
+        'medium',
+        'high',
+    )
 
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
-    due_date = models.DateTimeField(null=True, blank=True)
-    tags = models.JSONField(default=list, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    title = fields.StringField(required=True, max_length=255)
+    description = fields.StringField(required=False)
+    status = fields.StringField(choices=STATUS_CHOICES, default='todo')
+    priority = fields.StringField(choices=PRIORITY_CHOICES, default='medium')
+    due_date = fields.DateTimeField(required=False)
+    tags = fields.ListField(fields.StringField(), default=list)
+    user_id = fields.IntField(required=True)  # Store Django user ID
+    user_email = fields.StringField(required=True)  # Store user email for reference
+    created_at = fields.DateTimeField(required=True)
+    updated_at = fields.DateTimeField(required=True)
 
-    class Meta:
-        ordering = ['-created_at']
+    meta = {
+        'collection': 'tasks',
+        'ordering': ['-created_at']
+    }
 
     def __str__(self):
         return self.title

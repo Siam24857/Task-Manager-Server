@@ -1,20 +1,22 @@
-from django.db import models
+from mongoengine import Document, fields
 from django.contrib.auth import get_user_model
-from apps.images.models import Image
 
 User = get_user_model()
 
 
-class Annotation(models.Model):
-    image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='annotations')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='annotations')
-    polygons = models.JSONField(default=list)
-    label = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class Annotation(Document):
+    image_id = fields.StringField(required=True)  # MongoDB Image ID
+    user_id = fields.IntField(required=True)
+    user_email = fields.StringField(required=True)
+    polygons = fields.ListField(fields.DictField(), default=list)
+    label = fields.StringField(required=False)
+    created_at = fields.DateTimeField(required=True)
+    updated_at = fields.DateTimeField(required=True)
 
-    class Meta:
-        ordering = ['-created_at']
+    meta = {
+        'collection': 'annotations',
+        'ordering': ['-created_at']
+    }
 
     def __str__(self):
-        return f'Annotation for {self.image.title}'
+        return f'Annotation for image {self.image_id}'

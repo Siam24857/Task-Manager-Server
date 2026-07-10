@@ -17,7 +17,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return response
 
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.filter(user_id=self.request.user.id)
         status_filter = self.request.query_params.get('status', None)
         priority_filter = self.request.query_params.get('priority', None)
         search = self.request.query_params.get('search', None)
@@ -34,6 +34,18 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = TaskSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = TaskSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -44,8 +56,27 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         response = Response(status=status.HTTP_200_OK)
         return response
 
-    def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+    def get_object(self):
+        task_id = self.kwargs.get('pk')
+        return Task.objects.get(id=task_id, user_id=self.request.user.id)
+
+    def get(self, request, *args, **kwargs):
+        task = self.get_object()
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        task = self.get_object()
+        serializer = TaskSerializer(task, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        task = self.get_object()
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -64,8 +95,8 @@ class TaskBulkUpdateView(generics.UpdateAPIView):
             task_id = task_data.get('id')
             if task_id:
                 try:
-                    task = Task.objects.get(id=task_id, user=request.user)
-                    serializer = TaskSerializer(task, data=task_data, partial=True)
+                    task = Task.objects.get(id=task_id, user_id=request.user.id)
+                    serializer = TaskSerializer(task, data=task_data, partial=True, context={'request': request})
                     if serializer.is_valid():
                         serializer.save()
                         updated_tasks.append(serializer.data)
