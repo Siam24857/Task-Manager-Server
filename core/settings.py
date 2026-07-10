@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
+   
     'corsheaders',
     'mongoengine',
     'apps.authentication',
@@ -176,7 +176,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'apps.authentication.auth_backend.TokenAuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -199,42 +198,40 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': parse_timedelta(os.getenv('ACCESS_TOKEN_LIFETIME', '1 day'), timedelta(days=1)),
-    'REFRESH_TOKEN_LIFETIME': parse_timedelta(os.getenv('REFRESH_TOKEN_LIFETIME', '7 days'), timedelta(days=7)),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_COOKIE': 'access_token',
-    'REFRESH_COOKIE': 'refresh_token',
-    'AUTH_COOKIE_DOMAIN': None,
-    'AUTH_COOKIE_SECURE': False,  # Set to False for development
-    'AUTH_COOKIE_HTTPONLY': True,
-    'AUTH_COOKIE_PATH': '/',
-    'AUTH_COOKIE_SAMESITE': 'Lax',
-    'REFRESH_COOKIE_DOMAIN': None,
-    'REFRESH_COOKIE_SECURE': False,  # Set to False for development
-    'REFRESH_COOKIE_HTTPONLY': True,
-    'REFRESH_COOKIE_PATH': '/',
-    'REFRESH_COOKIE_SAMESITE': 'Lax',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'JTI_CLAIM': 'jti',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_COOKIE_SEND_ONLY': True,
-    'AUTH_COOKIE_RECEIVE': True,
-}
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': parse_timedelta(os.getenv('ACCESS_TOKEN_LIFETIME', '1 day'), timedelta(days=1)),
+#     'REFRESH_TOKEN_LIFETIME': parse_timedelta(os.getenv('REFRESH_TOKEN_LIFETIME', '7 days'), timedelta(days=7)),
+#     'ROTATE_REFRESH_TOKENS': True,
+#     'BLACKLIST_AFTER_ROTATION': True,
+#     'ALGORITHM': 'HS256',
+#     'SIGNING_KEY': SECRET_KEY,
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+#     'AUTH_COOKIE': 'access_token',
+#     'REFRESH_COOKIE': 'refresh_token',
+#     'AUTH_COOKIE_DOMAIN': None,
+#     'AUTH_COOKIE_SECURE': False,  # Set to False for development
+#     'AUTH_COOKIE_HTTPONLY': True,
+#     'AUTH_COOKIE_PATH': '/',
+#     'AUTH_COOKIE_SAMESITE': 'Lax',
+#     'REFRESH_COOKIE_DOMAIN': None,
+#     'REFRESH_COOKIE_SECURE': False,  # Set to False for development
+#     'REFRESH_COOKIE_HTTPONLY': True,
+#     'REFRESH_COOKIE_PATH': '/',
+#     'REFRESH_COOKIE_SAMESITE': 'Lax',
+#     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+#     'TOKEN_TYPE_CLAIM': 'token_type',
+#     'JTI_CLAIM': 'jti',
+#     'USER_ID_FIELD': 'id',
+#     'USER_ID_CLAIM': 'user_id',
+#     'AUTH_COOKIE_SEND_ONLY': True,
+#     'AUTH_COOKIE_RECEIVE': True,
+# }
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -243,7 +240,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://task-manager-client-feih-git-main-sheik-saims-projects.vercel.app",
     "https://task-manager-client-tff6-sable.vercel.app",
     "https://task-manager-server-git-main-sheik-saims-projects.vercel.app",
-    "https://task-manager-servers.vercel.app"
+    "https://task-manager-servers.vercel.app",
+    "https://task-manager-serverses.vercel.app",
+    ""
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
