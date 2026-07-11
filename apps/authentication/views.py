@@ -13,15 +13,19 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class RegisterView(generics.CreateAPIView):
+class CsrfExemptMixin:
+    @method_decorator(csrf_exempt, name='dispatch')
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def options(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_200_OK)
+
+
+class RegisterView(CsrfExemptMixin, generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
-
-    def options(self, request, *args, **kwargs):
-        response = Response(status=status.HTTP_200_OK)
-        return response
 
     def create(self, request, *args, **kwargs):
         try:
@@ -31,31 +35,33 @@ class RegisterView(generics.CreateAPIView):
 
             user = serializer.save()
 
-            auth_token = AuthToken.generate_token(user)
+            try:
+                auth_token = AuthToken.generate_token(user)
+                token = auth_token.token
+            except Exception as token_err:
+                logger.error("Token generation failed: %s", str(token_err))
+                token = None
 
-            response = Response({
+            return Response({
                 'user': UserSerializer(user).data,
-                'token': auth_token.token,
+                'token': token,
                 'message': 'User created successfully'
             }, status=status.HTTP_201_CREATED)
 
-            return response
         except Exception as exc:
             logger.exception("Registration error: %s", str(exc))
             detail = getattr(exc, 'detail', None)
             if detail is not None:
                 status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)
                 return Response(detail, status_code)
-            return Response({'detail': 'Registration failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {'detail': str(exc) or 'Registration failed. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginView(generics.GenericAPIView):
+class LoginView(CsrfExemptMixin, generics.GenericAPIView):
     permission_classes = [AllowAny]
-
-    def options(self, request, *args, **kwargs):
-        response = Response(status=status.HTTP_200_OK)
-        return response
 
     def post(self, request, *args, **kwargs):
         try:
@@ -63,37 +69,45 @@ class LoginView(generics.GenericAPIView):
             password = request.data.get('password')
 
             if not email or not password:
-                return Response({'detail': 'Email and password are required'},
-                              status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'detail': 'Email and password are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             user = authenticate(request, username=email, password=password)
 
             if user is None:
-                return Response({'detail': 'Invalid credentials'},
-                              status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {'detail': 'Invalid credentials'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
-            auth_token = AuthToken.generate_token(user)
+            try:
+                auth_token = AuthToken.generate_token(user)
+                token = auth_token.token
+            except Exception as token_err:
+                logger.error("Token generation failed for login: %s", str(token_err))
+                return Response(
+                    {'detail': 'Login succeeded but token generation failed.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
-            response = Response({
+            return Response({
                 'user': UserSerializer(user).data,
-                'token': auth_token.token,
+                'token': token,
                 'message': 'Login successful'
             }, status=status.HTTP_200_OK)
 
-            return response
         except Exception as exc:
             logger.exception("Login error: %s", str(exc))
-            return Response({'detail': 'Login failed. Please try again.'},
-                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {'detail': str(exc) or 'Login failed. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LogoutView(generics.GenericAPIView):
+class LogoutView(CsrfExemptMixin, generics.GenericAPIView):
     permission_classes = [AllowAny]
-
-    def options(self, request, *args, **kwargs):
-        response = Response(status=status.HTTP_200_OK)
-        return response
 
     def post(self, request, *args, **kwargs):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
@@ -111,18 +125,15 @@ class LogoutView(generics.GenericAPIView):
             except AuthToken.DoesNotExist:
                 pass
 
-        return Response({'message': 'Logged out successfully'},
-                         status=status.HTTP_200_OK)
+        return Response(
+            {'message': 'Logged out successfully'},
+            status=status.HTTP_200_OK
+        )
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class ProfileView(generics.RetrieveAPIView):
+class ProfileView(CsrfExemptMixin, generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-
-    def options(self, request, *args, **kwargs):
-        response = Response(status=status.HTTP_200_OK)
-        return response
 
     def get_object(self):
         return self.request.user

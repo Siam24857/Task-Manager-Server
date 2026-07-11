@@ -7,7 +7,6 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 def parse_timedelta(value, default):
     if isinstance(value, timedelta):
         return value
@@ -40,7 +39,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 vercel_host = os.getenv('VERCEL_URL', '').strip().replace('https://', '').replace('http://', '')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', '.railway.app', '.onrender.com']
 if vercel_host:
     ALLOWED_HOSTS.append(vercel_host)
     ALLOWED_HOSTS.append(f'.{vercel_host}')
@@ -63,7 +62,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-   
     'corsheaders',
     'mongoengine',
     'apps.authentication',
@@ -72,34 +70,17 @@ INSTALLED_APPS = [
     'apps.annotations',
 ]
 
-# Custom middleware to handle OPTIONS requests before any redirects
-class OptionsMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if request.method == 'OPTIONS':
-            from django.http import HttpResponse
-            response = HttpResponse(status=200)
-            response['Access-Control-Allow-Origin'] = '*'
-            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-            return response
-        return self.get_response(request)
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'core.settings.OptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
 ]
 
-# Disable trailing slash redirects to prevent CORS preflight issues
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'core.urls'
@@ -122,7 +103,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Use PostgreSQL for production on Vercel
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -134,7 +114,6 @@ DATABASES = {
     }
 }
 
-# Fallback to SQLite for local development
 if not os.getenv('POSTGRES_HOST'):
     DATABASES = {
         'default': {
@@ -163,18 +142,10 @@ if mongo_uri:
         logger.error("Failed to connect to MongoDB: %s", str(e))
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -182,16 +153,12 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -209,3 +176,26 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER': None,
 }
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_DOMAIN = None
+
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_DOMAIN = None
