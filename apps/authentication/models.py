@@ -3,6 +3,9 @@ from django.db import models
 from mongoengine import Document, fields
 import secrets
 from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class User(AbstractUser):
@@ -37,22 +40,26 @@ class AuthToken(Document):
     @classmethod
     def generate_token(cls, user):
         """Generate a new token for user"""
-        # Generate secure random token
-        token = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + timedelta(days=7)
-        
-        # Deactivate old tokens for this user
-        cls.objects.filter(user_id=user.id, is_active=True).update(is_active=False)
-        
-        # Create new token
-        return cls.objects.create(
-            user_id=user.id,
-            user_email=user.email,
-            token=token,
-            created_at=datetime.utcnow(),
-            expires_at=expires_at,
-            is_active=True
-        )
+        try:
+            token = secrets.token_urlsafe(32)
+            expires_at = datetime.utcnow() + timedelta(days=7)
+            
+            try:
+                cls.objects.filter(user_id=user.id, is_active=True).update(is_active=False)
+            except Exception as e:
+                logger.warning("Failed to deactivate old tokens for user %s: %s", user.id, str(e))
+            
+            return cls.objects.create(
+                user_id=user.id,
+                user_email=user.email,
+                token=token,
+                created_at=datetime.utcnow(),
+                expires_at=expires_at,
+                is_active=True
+            )
+        except Exception as e:
+            logger.error("Failed to generate token for user %s: %s", user.id, str(e))
+            raise
 
     @classmethod
     def validate_token(cls, token):
@@ -64,8 +71,11 @@ class AuthToken(Document):
             else:
                 auth_token.is_active = False
                 auth_token.save()
-                return None
+            return None
         except cls.DoesNotExist:
+            return None
+        except Exception as e:
+            logger.error("Token validation error: %s", str(e))
             return None
 
     def __str__(self):

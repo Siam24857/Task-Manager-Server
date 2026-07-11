@@ -4,8 +4,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import logging
 from .serializers import UserSerializer, RegisterSerializer
 from .models import AuthToken
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -38,11 +41,12 @@ class RegisterView(generics.CreateAPIView):
 
             return response
         except Exception as exc:
+            logger.exception("Registration error: %s", str(exc))
             detail = getattr(exc, 'detail', None)
             if detail is not None:
                 status_code = getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST)
-                return Response(detail, status=status_code)
-            return Response({'detail': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(detail, status_code)
+            return Response({'detail': 'Registration failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -78,7 +82,8 @@ class LoginView(generics.GenericAPIView):
 
             return response
         except Exception as exc:
-            return Response({'detail': f'Login error: {str(exc)}'},
+            logger.exception("Login error: %s", str(exc))
+            return Response({'detail': 'Login failed. Please try again.'},
                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

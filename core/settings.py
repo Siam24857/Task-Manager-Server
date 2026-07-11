@@ -144,10 +144,23 @@ if not os.getenv('POSTGRES_HOST'):
     }
 
 from mongoengine import connect
+import logging
+
+logger = logging.getLogger(__name__)
 
 mongo_uri = os.getenv('MONGODB_URI')
 if mongo_uri:
-    connect(db=os.getenv('DATABASE_NAME', 'task_manager'), host=mongo_uri)
+    try:
+        connect(
+            db=os.getenv('DATABASE_NAME', 'task_manager'),
+            host=mongo_uri,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000,
+            serverSelectionTimeoutMS=5000
+        )
+        logger.info("MongoDB connected successfully")
+    except Exception as e:
+        logger.error("Failed to connect to MongoDB: %s", str(e))
 
 AUTH_PASSWORD_VALIDATORS = [
     {
