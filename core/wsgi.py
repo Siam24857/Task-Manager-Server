@@ -1,7 +1,28 @@
 import os
-from django.core.wsgi import get_wsgi_application
+import logging
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+
+logger = logging.getLogger(__name__)
+
+import django
+django.setup()
+
+try:
+    from django.core.management import call_command
+    from django.conf import settings
+
+    db_config = settings.DATABASES['default']
+    if 'sqlite' in db_config['ENGINE']:
+        db_path = db_config.get('NAME', '')
+        if db_path and not os.path.exists(db_path):
+            logger.info("SQLite DB not found at %s, running migrate...", db_path)
+            call_command('migrate', '--run-syncdb', verbosity=0)
+            logger.info("Migrate completed.")
+except Exception as e:
+    logger.exception("DB init error: %s", str(e))
+
+from django.core.wsgi import get_wsgi_application
 
 django_app = get_wsgi_application()
 
